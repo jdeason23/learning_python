@@ -4,7 +4,7 @@
 import urllib.request
 
 URL = "" #enter the AWS API url here when ready
-URL2 = "http://python.org"
+URL2 = "http://www.espn.com"
 
 def main():
 	#get the data
