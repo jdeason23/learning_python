@@ -3,7 +3,7 @@
 # import urllib2 ...from Python 2
 import urllib.request
 
-URL = "" #enter the AWS API url here when ready
+URL = "https://4cqxh57pk1.execute-api.us-east-1.amazonaws.com/prod/LambdaTest?TableName=LambdaTestDB" #enter the AWS API url here when ready
 URL2 = "http://www.espn.com"
 
 def main():
