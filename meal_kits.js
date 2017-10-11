@@ -1,20 +1,15 @@
 /* eslint-disable  func-names */
 /* eslint quote-props: ["error", "consistent"]*/
 /**
- * This sample demonstrates a simple skill built with the Amazon Alexa Skills
- * nodejs skill development kit.
- * This sample supports multiple lauguages. (en-US, en-GB, de-DE).
- * The Intent Schema, Custom Slots and Sample Utterances for this skill, as well
- * as testing instructions are located at https://github.com/alexa/skill-sample-nodejs-fact
- **/
- 
- /*
+
+ /***********************************************************
  To Do
  
  Create templates for each screen I for the demo
+ Test navigating between screens (must keep session open)
  add a video player option
  
- */
+ ************************************************************/
 
 'use strict';
 
@@ -43,7 +38,7 @@ const languageStrings = {
                 'Despite being farther from the Sun, Venus experiences higher temperatures than Mercury.',
                 'Venus rotates counter-clockwise, possibly because of a collision in the past with an asteroid.',
             ],
-            SKILL_NAME: 'American Space Facts',
+            SKILL_NAME: 'Chick-fil-A Meal Kits',
         },
     },
 };
@@ -52,8 +47,7 @@ const handlers = {
     'LaunchRequest': function () {
         console.log("*** inside LaunchRequest ***")
         this.emit('WelcomeIntent');
-        //this.emit('GetFact');
-    },
+     },
     'GetNewFactIntent': function () {
         this.emit('GetFact');
     },
@@ -119,7 +113,6 @@ const handlers = {
     'WelcomeIntent': function () {
         console.log("*** inside WelcomeIntent ***")
         // Create speech output
-        //var speechOutput = this.t('WELCOME_MESSAGE');
         var speechOutput = "Thank you for choose a Chick-fil-A Meal Kit";
 
         //check to see if the device we're working with supports display directives
@@ -129,12 +122,43 @@ const handlers = {
           console.log("is simulator:"+isSimulator.call(this));
           var content = {
              "hasDisplaySpeechOutput" : speechOutput,
-             "hasDisplayRepromptText" : "randomFact",
-             "simpleCardTitle" : this.t('SKILL_NAME'),
+             "hasDisplayRepromptText" : "Reprompt Text",
+             "simpleCardTitle" : "",
              "simpleCardContent" : "",
              "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
              "bodyTemplateContent" : "",
+             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Welcome.jpg",
              "templateToken" : "WelcomeTemplate",
+             "askOrTell" : ":ask",
+             "sessionAttributes": {}
+          };
+          renderTemplate.call(this, content);
+        } else {
+        // Just use a card if the device doesn't support a card.
+          this.response.cardRenderer("Thanks");
+          this.response.speak(speechOutput);
+          this.emit(':responseReady');
+        }
+    },
+    'ShowMealsIntent': function () {
+        console.log("*** inside ShowMealsIntent ***")
+        // Create speech output
+        var speechOutput = "Here are the various Meal Kits.";
+        
+        //check to see if the device we're working with supports display directives
+        //enable the simulator if you're testing
+        if(supportsDisplay.call(this)||isSimulator.call(this)) {
+          console.log("has display:"+ supportsDisplay.call(this));
+          console.log("is simulator:"+isSimulator.call(this));
+          var content = {
+             "hasDisplaySpeechOutput" : speechOutput,
+             "hasDisplayRepromptText" : "Reprompt Text",
+             "simpleCardTitle" : "",
+             "simpleCardContent" : "",
+             "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
+             "bodyTemplateContent" : "",
+             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Menu.jpg",
+             "templateToken" : "MenuTemplate",
              "askOrTell" : ":ask",
              "sessionAttributes": {}
           };
@@ -192,20 +216,7 @@ function renderTemplate (content) {
 
 
    switch(content.templateToken) {
-       case "factBodyTemplate":
-          // for reference, here's an example of the content object you'd
-          // pass in for this template.
-          //  var content = {
-          //     "hasDisplaySpeechOutput" : "display "+speechOutput,
-          //     "hasDisplayRepromptText" : randomFact,
-          //     "simpleCardTitle" : this.t('SKILL_NAME'),
-          //     "simpleCardContent" : randomFact,
-          //     "bodyTemplateTitle" : this.t('GET_FACT_MESSAGE'),
-          //     "bodyTemplateContent" : randomFact,
-          //     "templateToken" : "factBodyTemplate",
-          //     "sessionAttributes": {}
-          //  };
-           
+       case "WelcomeTemplate":
            var response = {
              "version": "1.0",
              "response": {
@@ -220,7 +231,7 @@ function renderTemplate (content) {
                             "contentDescription":"background Image",
                             "sources":[
                                 {
-                                "url":"https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Welcome.jpg"
+                                "url": content.backgroundImage
                                 }
                                 ]
                     },
@@ -244,7 +255,7 @@ function renderTemplate (content) {
                    "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
                  }
                },
-               "shouldEndSession": false,
+               "shouldEndSession": content.askOrTell==":tell",
                "card": {
                  "type": "Simple",
                  "title": content.simpleCardTitle,
@@ -255,35 +266,124 @@ function renderTemplate (content) {
            }
            this.context.succeed(response);
            break;
-           
-       case "WelcomeTemplate":
+       case "MenuTemplate":
+           console.log("*** Content passed in = ", content);
            var response = {
              "version": "1.0",
              "response": {
                "directives": [
-                 {
-                   "type": "Display.RenderTemplate",
-                   "template": {
-                     "type": "BodyTemplate6",
-                     "title": content.bodyTemplateTitle,
-                     "token": content.templateToken,
-                     "backgroundImage":{
-                            "contentDescription":"background Image",
-                            "sources":[
+                   
+            {
+                "type": "Hint",
+                "hint": {
+                    "type": "PlainText",
+                    "text": "Say, Alexa show number 1"
+            }
+        },
+                    {
+                      "type": "Display.RenderTemplate",
+                      "template": {
+                        "type": "ListTemplate2",
+                        "token": "list_template_two",
+                        "title": "Meal Kits",
+                        "backButton": "VISIBLE",
+                        "backgroundImage": {
+                            "contentDescription": "Mt Fuji",
+                            "sources": [
                                 {
-                                "url":"https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Menu.jpg"
+                                    "url": "https://s3.amazonaws.com/cfa-meal-kit-images/background-2.jpg"
                                 }
-                                ]
-                    },
-                     "textContent": {
-                       "primaryText": {
-                         "type": "RichText",
-                         "text": "<font size = '5'>"+content.bodyTemplateContent+"</font>"
-                       }
-                     },
-                     "backButton": "HIDDEN"
-                   }
-                 }
+                            ]
+                        },
+                        "listItems": [
+                            {
+                                "token": "item_1",
+                                "image": {
+                                    "sources": [
+                                        {
+                                        "url": "https://s3.amazonaws.com/cfa-meal-kit-images/280x280.jpg"
+                                        }
+                                    ],
+                                    "contentDescription": "strawberry jam"
+                                },
+                                "textContent": {
+                                    "primaryText": {
+                                        "type": "PlainText",
+                                        "text": "Bacon Chicken Flatbread"
+                                    },
+                                    "secondaryText": {
+                                        "type": "PlainText",
+                                        "text": "850 Calories"
+                                    }
+                                }
+                            },
+                            {
+                                "token": "item_2",
+                                "image": {
+                                    "sources": [
+                                        {
+                                        "url": "https://s3.amazonaws.com/cfa-meal-kit-images/280x280.jpg"
+                                        }
+                                    ],
+                                    "contentDescription": "garlic oil"
+                                },
+                                "textContent": {
+                                    "primaryText": {
+                                        "type": "PlainText",
+                                        "text": "Southern Picnic Chicken"
+                                    },
+                                    "secondaryText": {
+                                        "type": "PlainText",
+                                        "text": "710 Calories"
+                                    }
+                                }
+                            },
+                            {
+                                "token": "item_2",
+                                "image": {
+                                    "sources": [
+                                        {
+                                        "url": "https://s3.amazonaws.com/cfa-meal-kit-images/280x280.jpg"
+                                        }
+                                    ],
+                                    "contentDescription": "strawberry jam"
+                                },
+                                "textContent": {
+                                    "primaryText": {
+                                        "type": "PlainText",
+                                        "text": "Kale Salad"
+                                    },
+                                    "secondaryText": {
+                                        "type": "PlainText",
+                                        "text": "500 Calories"
+                                    }
+                                }
+                            },
+                            {
+                                "token": "item_4",
+                                "image": {
+                                    "sources": [
+                                        {
+                                        "url": "https://s3.amazonaws.com/cfa-meal-kit-images/280x280.jpg"
+                                        }
+                                    ],
+                                    "contentDescription": "garlic oil"
+                                },
+                                "textContent": {
+                                    "primaryText": {
+                                        "type": "PlainText",
+                                        "text": "Chicken Sandwich"
+                                    },
+                                    "secondaryText": {
+                                        "type": "PlainText",
+                                        "text": "700 Calories"
+                                    }
+                                }
+                }
+
+            ]
+        }
+                    }
                ],
                "outputSpeech": {
                  "type": "SSML",
