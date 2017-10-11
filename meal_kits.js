@@ -5,7 +5,7 @@
  /***********************************************************
  To Do
  
- Create templates for each screen I for the demo
+ Create templates for each screen for the demo
  Test navigating between screens (must keep session open)
  add a video player option
  
@@ -170,6 +170,36 @@ const handlers = {
           this.emit(':responseReady');
         }
     },
+    'PlayVideoIntent': function () {
+        console.log("*** inside PlayVideoIntent ***")
+        // Create speech output
+        var speechOutput = "Here are the various Meal Kits.";
+        
+        //check to see if the device we're working with supports display directives
+        //enable the simulator if you're testing
+        if(supportsDisplay.call(this)||isSimulator.call(this)) {
+          console.log("has display:"+ supportsDisplay.call(this));
+          console.log("is simulator:"+isSimulator.call(this));
+          var content = {
+             "hasDisplaySpeechOutput" : speechOutput,
+             "hasDisplayRepromptText" : "Reprompt Text",
+             "simpleCardTitle" : "",
+             "simpleCardContent" : "",
+             "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
+             "bodyTemplateContent" : "",
+             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Menu.jpg",
+             "templateToken" : "PlayVideoTemplate",
+             "askOrTell" : ":ask",
+             "sessionAttributes": {}
+          };
+          renderTemplate.call(this, content);
+        } else {
+        // Just use a card if the device doesn't support a card.
+          this.response.cardRenderer("Thanks");
+          this.response.speak(speechOutput);
+          this.emit(':responseReady');
+        }
+    },
     'GetInfoIntent': function () {
         console.log("*** inside GetInfoIntent ***")
         this.response.speak(this.t('STOP_MESSAGE'));
@@ -221,6 +251,13 @@ function renderTemplate (content) {
              "version": "1.0",
              "response": {
                "directives": [
+                 {
+                "type": "Hint",
+                "hint": {
+                    "type": "PlainText",
+                    "text": "Show Meal Kits"
+                    }
+                },
                  {
                    "type": "Display.RenderTemplate",
                    "template": {
@@ -277,9 +314,9 @@ function renderTemplate (content) {
                 "type": "Hint",
                 "hint": {
                     "type": "PlainText",
-                    "text": "Say, Alexa show number 1"
-            }
-        },
+                    "text": "show number 1"
+                }
+            },
                     {
                       "type": "Display.RenderTemplate",
                       "template": {
@@ -312,8 +349,8 @@ function renderTemplate (content) {
                                         "text": "Bacon Chicken Flatbread"
                                     },
                                     "secondaryText": {
-                                        "type": "PlainText",
-                                        "text": "850 Calories"
+                                        "type": "RichText",
+                                        "text": "<font size='2'><i>850 Calories</i></font>"
                                     }
                                 }
                             },
@@ -322,7 +359,7 @@ function renderTemplate (content) {
                                 "image": {
                                     "sources": [
                                         {
-                                        "url": "https://s3.amazonaws.com/cfa-meal-kit-images/280x280.jpg"
+                                        "url": "https://s3.amazonaws.com/cfa-meal-kit-images/menu_item_1.png"
                                         }
                                     ],
                                     "contentDescription": "garlic oil"
@@ -333,8 +370,8 @@ function renderTemplate (content) {
                                         "text": "Southern Picnic Chicken"
                                     },
                                     "secondaryText": {
-                                        "type": "PlainText",
-                                        "text": "710 Calories"
+                                        "type": "RichText",
+                                        "text": "<font size='2'><i>710 Calories</i></font>"
                                     }
                                 }
                             },
@@ -354,8 +391,8 @@ function renderTemplate (content) {
                                         "text": "Kale Salad"
                                     },
                                     "secondaryText": {
-                                        "type": "PlainText",
-                                        "text": "500 Calories"
+                                        "type": "RichText",
+                                        "text": "<font size='2'><i>500 Calories</i></font>"
                                     }
                                 }
                             },
@@ -375,8 +412,8 @@ function renderTemplate (content) {
                                         "text": "Chicken Sandwich"
                                     },
                                     "secondaryText": {
-                                        "type": "PlainText",
-                                        "text": "700 Calories"
+                                        "type": "RichText",
+                                        "text": "<font size='2'><i>700 Calories</i></font>"
                                     }
                                 }
                 }
@@ -406,6 +443,76 @@ function renderTemplate (content) {
            }
            this.context.succeed(response);
            break;
+           
+           case "PlayVideoTemplate":
+            console.log("*** Inside the PlayVideoTemplate ***");
+           console.log("*** Content passed in = ", content);
+           var response = {
+             "version": "1.0",
+             "response": {
+               "directives": [
+                   {//beginning of videoItem directive
+                    "type": "VideoApp.Launch",
+                    "videoItem":
+                        {
+                        "source": "https://s3.amazonaws.com/cfa-meal-kit-images/alexa_test.mp4",
+                        "metadata": {
+                            "title": "Title for Sample Video",
+                            "subtitle": "Secondary Title for Sample Video"
+                                    }
+                        }   
+                    },//end of videoItem directive
+                    {//beginning of BodyTemplate6 directive
+                    "type": "Display.RenderTemplate",
+                    "template": {
+                        "type": "BodyTemplate6",
+                        "token": "bt6",
+                        "backButton": "VISIBLE",
+                        "backgroundImage": {
+                            "contentDescription": "Mt Fuji",
+                            "sources": [
+                                {
+                                    "url": "https://s3.amazonaws.com/cfa-meal-kit-images/background-1.jpg"
+                                }
+                            ]
+                        },
+                        "textContent": {
+                            "primaryText": {
+                                "text": "Primary_Text",
+                                "type": "PlainText"
+                            },
+                            "secondaryText": {
+                                "text": "Secondary_Text",
+                                "type": "PlainText"
+                            }
+                        }
+                    }
+                }//end of BodyTemplate6 directive
+            
+               ],
+               "outputSpeech": {
+                 "type": "SSML",
+                 "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+               },
+               "reprompt": {
+                 "outputSpeech": {
+                   "type": "SSML",
+                   "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+                 }
+               },
+               "shouldEndSession": content.askOrTell==":tell",
+               "card": {
+                 "type": "Simple",
+                 "title": content.simpleCardTitle,
+                 "content": content.simpleCardContent
+               }
+             },
+             "sessionAttributes": content.sessionAttributes
+           }
+           this.context.succeed(response);
+           break;
+
+           
        default:
           this.response.speak("Thanks for chatting, goodbye");
           this.emit(':responseReady');
