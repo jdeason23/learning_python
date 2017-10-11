@@ -7,6 +7,14 @@
  * The Intent Schema, Custom Slots and Sample Utterances for this skill, as well
  * as testing instructions are located at https://github.com/alexa/skill-sample-nodejs-fact
  **/
+ 
+ /*
+ To Do
+ 
+ Create templates for each screen I for the demo
+ add a video player option
+ 
+ */
 
 'use strict';
 
@@ -43,8 +51,8 @@ const languageStrings = {
 const handlers = {
     'LaunchRequest': function () {
         console.log("*** inside LaunchRequest ***")
-        //this.emit('WelcomeIntent');
-        this.emit('GetFact');
+        this.emit('WelcomeIntent');
+        //this.emit('GetFact');
     },
     'GetNewFactIntent': function () {
         this.emit('GetFact');
@@ -110,8 +118,33 @@ const handlers = {
     },
     'WelcomeIntent': function () {
         console.log("*** inside WelcomeIntent ***")
-        this.response.speak(this.t('STOP_MESSAGE'));
-        this.emit(':responseReady');
+        // Create speech output
+        //var speechOutput = this.t('WELCOME_MESSAGE');
+        var speechOutput = "Thank you for choose a Chick-fil-A Meal Kit";
+
+        //check to see if the device we're working with supports display directives
+        //enable the simulator if you're testing
+        if(supportsDisplay.call(this)||isSimulator.call(this)) {
+          console.log("has display:"+ supportsDisplay.call(this));
+          console.log("is simulator:"+isSimulator.call(this));
+          var content = {
+             "hasDisplaySpeechOutput" : speechOutput,
+             "hasDisplayRepromptText" : "randomFact",
+             "simpleCardTitle" : this.t('SKILL_NAME'),
+             "simpleCardContent" : "",
+             "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
+             "bodyTemplateContent" : "",
+             "templateToken" : "WelcomeTemplate",
+             "askOrTell" : ":ask",
+             "sessionAttributes": {}
+          };
+          renderTemplate.call(this, content);
+        } else {
+        // Just use a card if the device doesn't support a card.
+          this.response.cardRenderer("Thanks");
+          this.response.speak(speechOutput);
+          this.emit(':responseReady');
+        }
     },
     'GetInfoIntent': function () {
         console.log("*** inside GetInfoIntent ***")
@@ -211,6 +244,57 @@ function renderTemplate (content) {
                    "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
                  }
                },
+               "shouldEndSession": false,
+               "card": {
+                 "type": "Simple",
+                 "title": content.simpleCardTitle,
+                 "content": content.simpleCardContent
+               }
+             },
+             "sessionAttributes": content.sessionAttributes
+           }
+           this.context.succeed(response);
+           break;
+           
+       case "WelcomeTemplate":
+           var response = {
+             "version": "1.0",
+             "response": {
+               "directives": [
+                 {
+                   "type": "Display.RenderTemplate",
+                   "template": {
+                     "type": "BodyTemplate6",
+                     "title": content.bodyTemplateTitle,
+                     "token": content.templateToken,
+                     "backgroundImage":{
+                            "contentDescription":"background Image",
+                            "sources":[
+                                {
+                                "url":"https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Menu.jpg"
+                                }
+                                ]
+                    },
+                     "textContent": {
+                       "primaryText": {
+                         "type": "RichText",
+                         "text": "<font size = '5'>"+content.bodyTemplateContent+"</font>"
+                       }
+                     },
+                     "backButton": "HIDDEN"
+                   }
+                 }
+               ],
+               "outputSpeech": {
+                 "type": "SSML",
+                 "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+               },
+               "reprompt": {
+                 "outputSpeech": {
+                   "type": "SSML",
+                   "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+                 }
+               },
                "shouldEndSession": content.askOrTell==":tell",
                "card": {
                  "type": "Simple",
@@ -222,7 +306,6 @@ function renderTemplate (content) {
            }
            this.context.succeed(response);
            break;
-
        default:
           this.response.speak("Thanks for chatting, goodbye");
           this.emit(':responseReady');
