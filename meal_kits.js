@@ -15,8 +15,8 @@
  To Do
  
  Test navigating between screens (must keep session open)
- add a video player option
- Add touch responses from the Menu screen
+ setup instructions template and pass in all content via the content parameter
+ Add touch responses from the Menu screen - https://developer.amazon.com/docs/custom-skills/display-interface-reference.html#touch-selection-events
  Add VoiceLabs Analytics
  
  ************************************************************/
@@ -110,8 +110,39 @@ const handlers = {
              "simpleCardContent" : "",
              "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
              "bodyTemplateContent" : "",
-             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Menu.jpg",
+             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/chilled_grill_background_black70.jpg",
              "templateToken" : "MenuTemplate",
+             "askOrTell" : ":ask",
+             "sessionAttributes": {}
+          };
+          renderTemplate.call(this, content);
+        } else {
+        // Just use a card if the device doesn't support a card.
+          this.response.cardRenderer("Thanks");
+          this.response.speak(speechOutput);
+          this.emit(':responseReady');
+        }
+    },
+    'ShowInstructionsIntent': function () {
+        console.log("*** inside ShowInstructionsIntent ***");
+        // Create speech output
+        var speechOutput = "We will walk through the steps to make a delicious meal.";
+        
+        //check to see if the device we're working with supports display directives
+        //enable the simulator if you're testing
+        if(supportsDisplay.call(this)||isSimulator.call(this)) {
+          console.log("has display:"+ supportsDisplay.call(this));
+          console.log("is simulator:"+isSimulator.call(this));
+          var content = {
+             "hasDisplaySpeechOutput" : speechOutput,
+             "hasDisplayRepromptText" : "You can navigate the steps by saying Next or Back",
+             "simpleCardTitle" : "",
+             "simpleCardContent" : "",
+             "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
+             "instructions" : "Preheat a clean non-stick saute pan over medium heat.  Add pan spray or 1 teaspoon of cooking oil",
+             "bodyTemplateContent" : "Step 1...",
+             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/chilled_grill_background_black70.jpg",
+             "templateToken" : "InstructionsTemplate",
              "askOrTell" : ":ask",
              "sessionAttributes": {}
           };
@@ -126,7 +157,7 @@ const handlers = {
     'PlayVideoIntent': function () {
         console.log("*** inside PlayVideoIntent ***");
         // Create speech output
-        var speechOutput = "Here are the various Meal Kits.";
+        var speechOutput = "You can ask Alexa to pause, resume or restart the video once it begins.";
         
         //check to see if the device we're working with supports display directives
         //enable the simulator if you're testing
@@ -135,12 +166,12 @@ const handlers = {
           console.log("is simulator:"+isSimulator.call(this));
           var content = {
              "hasDisplaySpeechOutput" : speechOutput,
-             "hasDisplayRepromptText" : "Reprompt Text",
+             "hasDisplayRepromptText" : speechOutput,
              "simpleCardTitle" : "",
              "simpleCardContent" : "",
              "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
              "bodyTemplateContent" : "",
-             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/Sample_Menu.jpg",
+             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/chilled_grill_background_black70.jpg",
              "templateToken" : "PlayVideoTemplate",
              "askOrTell" : ":ask",
              "sessionAttributes": {}
@@ -379,6 +410,80 @@ function renderTemplate (content) {
             ]
         }
                     }
+               ],
+               "outputSpeech": {
+                 "type": "SSML",
+                 "ssml": "<speak>"+content.hasDisplaySpeechOutput+"</speak>"
+               },
+               "reprompt": {
+                 "outputSpeech": {
+                   "type": "SSML",
+                   "ssml": "<speak>"+content.hasDisplayRepromptText+"</speak>"
+                 }
+               },
+               "shouldEndSession": content.askOrTell==":tell",
+               "card": {
+                 "type": "Simple",
+                 "title": content.simpleCardTitle,
+                 "content": content.simpleCardContent
+               }
+             },
+             "sessionAttributes": content.sessionAttributes
+           }
+           this.context.succeed(response);
+           break;
+           
+       case "InstructionsTemplate":
+           var response = {
+             "version": "1.0",
+             "response": {
+               "directives": [
+                 {
+                "type": "Hint",
+                "hint": {
+                    "type": "PlainText",
+                    "text": "Play a video"
+                    }
+                },
+                 {
+                   "type": "Display.RenderTemplate",
+                   "template": {
+                     "type": "BodyTemplate3",
+                     "title": content.bodyTemplateTitle,
+                     "token": content.templateToken,
+                     "backgroundImage":{
+                            "contentDescription":"background Image",
+                            "sources":[
+                                {
+                                "url": content.backgroundImage
+                                }
+                                ]
+                    },
+                    "image": {
+                        "contentDescription": "Southern Chicken Picnic",
+                        "sources": [
+                            {
+                                "url": "https://s3.amazonaws.com/cfa-meal-kit-images/southern-picnic-chicken-340x340.jpg"
+                            }
+                        ]
+                    },
+                     "textContent": {
+                       "primaryText": {
+                            "type": "RichText",
+                            "text": "<font size = '3'>"+content.bodyTemplateContent+"</font>"
+                       },
+                        "secondaryText": {
+                            "text": "<font size='3'>" + content.instructions + "</font>",
+                            "type": "RichText"
+                        },
+                        "tertiaryText": {
+                            "text": "",
+                            "type": "PlainText"
+                        }
+                     },
+                     "backButton": "VISIBLE"
+                   }
+                 }
                ],
                "outputSpeech": {
                  "type": "SSML",
