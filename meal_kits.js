@@ -189,6 +189,100 @@ const handlers = {
         this.response.speak(STOP_MESSAGE);
         this.emit(':responseReady');
     },
+    "ElementSelected" : function() {
+      // We will look for the value in this.event.request.token in the AnswerIntent call to compareSlots
+      console.log("*** in ElementSelected function ***");
+      this.emitWithState("ShowDetailsIntent");
+    },
+    "ShowDetailsIntent": function() {
+        console.log("*** in ShowDetailsIntent function ***");
+        var response = "";
+        var item = this.attributes["quizitem"];
+        var property = this.attributes["quizproperty"];
+        console.log("*** this.attributes.mealkits = ", this.attributes.mealkits);
+        
+        //*** We should now setup the content and send to renderTemplate()
+        //*** to show a screen with more details
+        
+        //Begin*************************************************************
+        console.log("*** sending to Welcome message as a test ***");
+        var speechOutput = WELCOME_MESSAGE;
+
+        //check to see if the device we're working with supports display directives
+        //enable the simulator if you're testing
+        if(supportsDisplay.call(this)||isSimulator.call(this)) {
+          console.log("has display:"+ supportsDisplay.call(this));
+          console.log("is simulator:"+isSimulator.call(this));
+          var content = {
+             "hasDisplaySpeechOutput" : speechOutput,
+             "hasDisplayRepromptText" : "Reprompt Text",
+             "simpleCardTitle" : "",
+             "simpleCardContent" : "",
+             "bodyTemplateTitle" : 'Welcome to Chick-fil-A',
+             "bodyTemplateContent" : "",
+             "backgroundImage" : "https://s3.amazonaws.com/cfa-meal-kit-images/cfa-background-black70.jpg",
+             "templateToken" : "WelcomeTemplate",
+             "askOrTell" : ":ask",
+             "sessionAttributes": {}
+          };
+          renderTemplate.call(this, content);
+        } else {
+        // Just use a card if the device doesn't support a card.
+          this.response.cardRenderer("Thanks");
+          this.response.speak(speechOutput);
+          this.emit(':responseReady');
+        }
+        
+        //END***************************************************************
+        
+        //var correct = compareSlots.call(this, item[property]);
+
+        /*if (correct)
+        {
+            response = getSpeechCon(true);
+            this.attributes["quizscore"]++;
+        }
+        else
+        {
+            response = getSpeechCon(false);
+        }
+
+        response += getAnswer(property, item);
+
+        if (this.attributes["counter"] < 10)
+        {
+            response += getCurrentScore(this.attributes["quizscore"], this.attributes["counter"]);
+            this.attributes["response"] = response;
+            this.emitWithState("AskQuestion");
+        }
+        else
+        {
+          response += getFinalScore(this.attributes["quizscore"], this.attributes["counter"]);
+          if (supportsDisplay.call(this)||isSimulator.call(this)) {
+            //this device supports a display
+
+            let content = {
+                  "hasDisplaySpeechOutput" : response + " " + EXIT_SKILL_MESSAGE,
+                  "bodyTemplateContent" : getFinalScore(this.attributes["quizscore"], this.attributes["counter"]),
+                  "templateToken" : "FinalScoreView",
+                  "askOrTell": ":tell",
+                  "sessionAttributes" : this.attributes
+              };
+              if (USE_IMAGES_FLAG) {
+                content["backgroundImageUrl"]=getBackgroundImage(item);
+              }
+              renderTemplate.call(this,content);
+
+
+
+          } else {
+
+            this.response.speak(response + " " + EXIT_SKILL_MESSAGE);
+            this.emit(":responseReady");
+          }
+        }*/
+    },
+
     'Unhandled': function () {
         console.log("*** inside Unhandled Intent ***");
         this.response.speak(UNHANDLED_MESSAGE);
@@ -292,6 +386,7 @@ function renderTemplate (content) {
            }
            this.context.succeed(response);
            break;
+           
        case "MenuTemplate":
            console.log("*** Content passed in = ", content);
            var response = {
